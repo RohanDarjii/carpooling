@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ride Booking System</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0; padding: 0; min-height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      background: radial-gradient(circle at top, #e4f0ff, #f7f7f7 55%, #f0f0f0);
+      color: #111827;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 28px 26px 24px;
+      width: 380px;
+      max-width: 92vw;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(148, 163, 184, 0.15);
+      position: relative; overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0 0, rgba(59,130,246,0.12), transparent 55%);
+      pointer-events: none;
+    }
+
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px; position: relative; z-index: 1;
+    }
+
+    .card-title { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; }
+    .card-subtitle { font-size: 12px; color: #6b7280; margin-top: 4px; }
+
+    .badge {
+      font-size: 11px; padding: 4px 9px; border-radius: 999px;
+      background: rgba(59,130,246,0.08); color: #1d4ed8;
+      border: 1px solid rgba(129,140,248,0.5); font-weight: 500;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    .badge-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.2);
+    }
+
+    .card-body { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; position: relative; z-index: 1; }
+
+    .field-group { display: flex; gap: 10px; }
+    .field { flex: 1; text-align: left; }
+
+    label {
+      font-size: 12px; font-weight: 600; color: #6b7280;
+      letter-spacing: 0.02em; text-transform: uppercase; display: block; margin-bottom: 4px;
+    }
+
+    input {
+      width: 100%; padding: 9px 11px; font-size: 14px; border-radius: 10px;
+      border: 1px solid #e5e7eb; background: #f9fafb; outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, transform 0.08s ease;
+    }
+
+    input::placeholder { color: #9ca3af; }
+
+    input:focus {
+      background: #ffffff; border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.3), 0 10px 25px rgba(15,23,42,0.12);
+      transform: translateY(-1px);
+    }
+
+    #checkBtn {
+      width: 100%; padding: 11px 14px; font-size: 15px; font-weight: 600;
+      border-radius: 999px; border: none;
+      background: linear-gradient(135deg, #2563eb, #4f46e5);
+      color: #f9fafb; cursor: pointer; margin-top: 6px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 12px 30px rgba(37,99,235,0.45), 0 0 0 1px rgba(191,219,254,0.7);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease; position: relative; z-index: 1;
+    }
+
+    #checkBtn span.icon { font-size: 17px; transform: translateY(0.5px); }
+    #checkBtn:hover { transform: translateY(-1px); box-shadow: 0 18px 38px rgba(37,99,235,0.55), 0 0 0 1px rgba(191,219,254,0.9); filter: brightness(1.03); }
+    #checkBtn:active { transform: translateY(0); box-shadow: 0 8px 20px rgba(37,99,235,0.4), 0 0 0 1px rgba(191,219,254,0.9); filter: brightness(0.98); }
+
+    .messages { margin-bottom: 10px; font-size: 13px; color: #b91c1c; background: #fef2f2; border-radius: 10px; padding: 8px 10px; border: 1px solid #fecaca; }
+    .rides { margin-top: 14px; font-size: 13px; color: #4b5563; background: #f9fafb; border-radius: 12px; padding: 10px 11px; max-height: 180px; overflow-y: auto; border: 1px dashed #e5e7eb; position: relative; z-index: 1; }
+    .rides p { margin: 4px 0; }
+
+    @media (max-width: 480px) {
+      .card { padding: 22px 18px 20px; border-radius: 16px; }
+      .card-title { font-size: 18px; }
+      .field-group { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-header">
+    <div>
+      <div class="card-title">Book a Ride</div>
+      <div class="card-subtitle">Select your dates, destination and time slot.</div>
+    </div>
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Live availability
+    </div>
+  </div>
+
+  {# show errors if any #}
+  {% if errors %}
+    <div class="messages">
+      {% for e in errors %}
+        <p>⚠️ {{ e }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="card-body">
+      <div class="field-group">
+        <div class="field">
+          <label for="fromDate">From Date</label>
+          <input type="date" id="fromDate" name="from_date" value="{{ form.from_date|default:'' }}">
+        </div>
+        <div class="field">
+          <label for="toDate">To Date</label>
+          <input type="date" id="toDate" name="to_date" value="{{ form.to_date|default:'' }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="destination">Destination</label>
+        <input type="text" id="destination" name="destination" placeholder="e.g. University, Airport" value="{{ form.destination|default:'' }}">
+      </div>
+
+      <div class="field-group">
+        <div class="field">
+          <label for="timeFrom">Time From</label>
+          <input type="time" id="timeFrom" name="time_from" value="{{ form.time_from|default:'' }}">
+        </div>
+        <div class="field">
+          <label for="timeTo">Time To</label>
+          <input type="time" id="timeTo" name="time_to" value="{{ form.time_to|default:'' }}">
+        </div>
+      </div>
+    </div>
+
+    <button id="checkBtn" type="submit">
+      <span class="icon">🚗</span>
+      Check Availability
+    </button>
+  </form>
+
+</body>
+</html>
